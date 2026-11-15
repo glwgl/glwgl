@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Obsessive Glow</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Liter&display=swap">
+<link rel="preload" as="image" href="photos/1.jpg">
+<link rel="preload" as="image" href="photos/2.jpg">
+<link rel="preload" as="image" href="photos/3.jpg">
+<link rel="preload" as="image" href="photos/4.jpg">
 <style>
   :root { color-scheme: light; --u: calc(min(100vw, 480px) / 1080); }
   html, body { margin: 0; background: #fff; }
@@ -48,7 +52,31 @@
   }
   .t.small { font-size: calc(var(--u) * 70); letter-spacing: -0.05em; line-height: 1; }
 
-  #nameRow { top: calc(var(--u) * 100); }
+  /* Шапка: белая подложка 200 (50 отступ, 100 название, 50 отступ), закреплена сверху */
+  #head {
+    --e: 0;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    width: min(100vw, 480px);
+    margin-left: calc(min(100vw, 480px) / -2);
+    box-sizing: border-box;
+    height: calc(var(--u) * 200 + env(safe-area-inset-top, 0px));
+    background: #fff;
+    z-index: 20;
+  }
+  #nameRow { top: calc(var(--u) * 50 + env(safe-area-inset-top, 0px)); }
+  /* Слой над шапкой: 3D-лого и зона вращения (лого заезжает в шапку поверх подложки) */
+  #fx {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    width: min(100vw, 480px);
+    margin-left: calc(min(100vw, 480px) / -2);
+    height: 100%;
+    pointer-events: none;
+    z-index: 30;
+  }
   /* Место под логотип слева от названия: растёт от 0 до 61×70 по мере прокрутки. */
   .slot {
     flex: none;
@@ -57,20 +85,22 @@
     height: 1px;
   }
 
-  /* «Листай ниже» закреплено внизу экрана всегда; mix-blend-mode: difference делает его читаемым и над фото */
+  /* «Листай ниже»: белая подложка 200 (50 отступ, 100 текст, 50 отступ), закреплена снизу, контент уезжает под неё */
   #hint {
     position: fixed;
     left: 50%;
     width: min(100vw, 480px);
     margin-left: calc(min(100vw, 480px) / -2);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--u) * 20);
-    height: calc(var(--u) * 100);
+    bottom: 0;
+    box-sizing: border-box;
+    height: calc(var(--u) * 200 + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: calc(var(--u) * 25);
-    color: #fff;
-    mix-blend-mode: difference;
+    background: #fff;
+    color: #000;
     pointer-events: none;
     z-index: 20;
   }
@@ -96,14 +126,13 @@
     pointer-events: none;
     transform-origin: 50% 50%;
     will-change: transform;
-    z-index: 5;
   }
   #stage canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
   /* Зона вращения меньше всего поля: всё вокруг логотипа остаётся для обычной прокрутки */
   #hit {
     position: absolute;
     left: 0; top: 0; width: 0; height: 0;
-    z-index: 6;
+    pointer-events: auto;
     touch-action: none;
     cursor: grab;
   }
@@ -138,16 +167,17 @@
 <div id="spacer"></div>
 
 <div class="page" id="page">
-  <div class="row" id="nameRow"><span class="slot"></span><span class="t" id="title">Obsessive Glow</span></div>
   <div class="row label" id="lblPort"><span class="t">Портфолио</span></div>
   <div class="row label" id="lblPost"><span class="t">Постеры</span></div>
   <div id="tiles"></div>
 
+</div>
+<div id="head"><div class="row" id="nameRow"><span class="slot"></span><span class="t" id="title">Obsessive Glow</span></div></div>
+<div id="fx">
   <div id="stage"></div>
   <div id="hit"></div>
-
 </div>
-<div id="hint"><span class="t small">Листай ниже</span><svg width="50" height="28" viewBox="0 0 50 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M44.6659 0.911197C45.8863 -0.303709 47.8645 -0.303756 49.0849 0.911197C50.305 2.12617 50.3051 4.09567 49.0849 5.31054L27.2096 27.0885C26.6236 27.6719 25.8288 27.9999 25.0001 28C24.1714 28 23.3766 27.6718 22.7906 27.0885L0.915303 5.31054C-0.305101 4.09557 -0.305101 2.12617 0.915303 0.911197C2.13571 -0.303708 4.11393 -0.303756 5.33431 0.911197L25.0001 20.4895L44.6659 0.911197Z" fill="#fff"/></svg></div>
+<div id="hint"><span class="t small">Листай ниже</span><svg width="50" height="28" viewBox="0 0 50 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M44.6659 0.911197C45.8863 -0.303709 47.8645 -0.303756 49.0849 0.911197C50.305 2.12617 50.3051 4.09567 49.0849 5.31054L27.2096 27.0885C26.6236 27.6719 25.8288 27.9999 25.0001 28C24.1714 28 23.3766 27.6718 22.7906 27.0885L0.915303 5.31054C-0.305101 4.09557 -0.305101 2.12617 0.915303 0.911197C2.13571 -0.303708 4.11393 -0.303756 5.33431 0.911197L25.0001 20.4895L44.6659 0.911197Z" fill="#000"/></svg></div>
 <div id="err">Не удалось загрузить 3D-библиотеку.</div>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -171,7 +201,7 @@
   var $ = function (s) { return document.querySelector(s); };
   var page = $('#page'), stage = $('#stage'), hit = $('#hit'), spacer = $('#spacer');
   var titleEl = $('#title'), lblPort = $('#lblPort'), lblPost = $('#lblPost');
-  var tilesBox = $('#tiles');
+  var tilesBox = $('#tiles'), head = $('#head'), hintEl = $('#hint');
 
   /* ---------- Фото-плитки (положение из макета, в единицах макета 1080) ---------- */
   // [номер, left, top, width, height]  — файлы лежат в папке photos/ : 1.jpg … 9.jpg
@@ -194,7 +224,7 @@
       if (i >= exts.length) return;
       var url = 'photos/' + n + '.' + exts[i++];
       var im = new Image();
-      im.onload = function () { cb(url); };
+      im.onload = function () { if (im.decode) im.decode().then(function () { cb(url); }, function () { cb(url); }); else cb(url); };
       im.onerror = next;
       im.src = url;
     })();
@@ -222,14 +252,12 @@
   function reveal(t) {
     t.rev = true;
     t.el.classList.add('ph');                       // сначала пустой квадрат с крестом
-    t.timer = setTimeout(function () {              // через случайное время — фото
-      t.wantOn = true;
-      if (t.url) t.el.classList.add('on');
-    }, 150 + Math.random() * 900);
+    t.visAt = 0;
+    // сколько квадрат «висит» без фото с момента, как попал в экран: верхние чуть дольше, нижние — короче
+    t.delay = t.top < vh * 0.9 ? 700 + Math.random() * 800 : 300 + Math.random() * 500;
   }
   function resetTile(t) {
-    clearTimeout(t.timer);
-    t.rev = false; t.wantOn = false;
+    t.rev = false; t.wantOn = false; t.visAt = 0;
     t.el.classList.remove('on');
     t.el.classList.remove('ph');
   }
@@ -306,7 +334,7 @@
   hit.addEventListener('lostpointercapture', release);
 
   /* ---------- Размеры и анимация по прокрутке ---------- */
-  var pageW = 480, u = 0.444, vh = 700, T = 600, titleW = 0, logoFrac = 0.39, sc1 = 0.1;
+  var pageW = 480, u = 0.444, startY = 1170 * 0.444, endYc = 100 * 0.444, vh = 700, T = 600, titleW = 0, logoFrac = 0.39, sc1 = 0.1;
 
   function layout() {
     pageW = Math.min(innerWidth, 480);
@@ -315,6 +343,9 @@
     T = Math.round(Math.max(vh * 0.9, 480));          // сколько прокрутки занимает переезд логотипа
     spacer.style.height = (T + 2888 * u) + 'px';
     titleW = titleEl.offsetWidth;
+    var barH = hintEl.offsetHeight, headH = head.offsetHeight;
+    endYc = (headH - 200 * u) + 100 * u;               // центр названия (с учётом safe-area сверху)
+    startY = (headH + (vh - barH)) / 2;                // лого по центру между подложками
     sc1 = (70 * u) / (logoFrac * 1740 * u);            // во сколько раз лого уменьшается до 70 в шапке
     tiles.forEach(function (t) { t.top = t.y * u; });
   }
@@ -349,14 +380,14 @@
     var e = ease(pCur);
     var pageScroll = Math.max(0, sy - T);
 
-    page.style.setProperty('--e', e.toFixed(4));
+    head.style.setProperty('--e', e.toFixed(4));
     page.style.transform = 'translate3d(0,' + (-pageScroll) + 'px,0)';
 
     // 3D-логотип: из центра поля в шапку слева от названия
     var rowW = 86 * u * e + titleW;
     var endX = (pageW - rowW) / 2 + 30.5 * u * e;
-    var endY = 150 * u, startX = pageW / 2, startY = 1170 * u;
-    stage.style.transform = 'translate3d(' + ((endX - startX) * e) + 'px,' + ((endY - startY) * e) + 'px,0) scale(' + Math.pow(sc1, e) + ')';
+    var endY = endYc, startX = pageW / 2;
+    stage.style.transform = 'translate3d(' + ((endX - startX) * e) + 'px,' + ((startY - 1170 * u) + (endY - startY) * e) + 'px,0) scale(' + Math.pow(sc1, e) + ')';
     // Зона вращения едет вместе с логотипом (в шапке не меньше 56px, чтобы попасть пальцем)
     var sc = Math.pow(sc1, e);
     var hw = Math.max(560 * u * sc, 56), hh = Math.max(620 * u * sc, 56);
@@ -372,11 +403,23 @@
       lblPost.classList.remove('show');
       for (var k = 0; k < tiles.length; k++) if (tiles[k].rev) resetTile(tiles[k]);
     } else {
-      if (pCur > 0.8) lblPort.classList.add('show');
-      if (pCur > 0.88 && 780 * u - pageScroll < vh * 0.92) lblPost.classList.add('show');
-      for (var i = 0; i < tiles.length; i++) {
-        var t = tiles[i];
-        if (!t.rev && pCur >= t.a && t.top - pageScroll < vh * 0.95) reveal(t);
+      // «Портфолио», «Постеры» и все квадраты с крестами появляются одновременно; фото проявляются хаотично, уже заранее
+      if (pCur > 0.55) {
+        lblPort.classList.add('show');
+        lblPost.classList.add('show');
+        for (var i = 0; i < tiles.length; i++) if (!tiles[i].rev) reveal(tiles[i]);
+      }
+      // Фото проявляется, когда квадрат попал в экран и «повисел» немного; по мере листания вниз — так же для нижних
+      for (var j = 0; j < tiles.length; j++) {
+        var tj = tiles[j];
+        if (!tj.rev || tj.wantOn) continue;
+        if (tj.top - pageScroll < vh * 0.88) {
+          if (!tj.visAt) tj.visAt = now;
+          if (now - tj.visAt > tj.delay) {
+            tj.wantOn = true;
+            if (tj.url) tj.el.classList.add('on');
+          }
+        }
       }
     }
 
