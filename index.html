@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Liter&display=swap">
 <style>
   :root { color-scheme: light; --u: calc(min(100vw, 480px) / 1080); }
-  html, body { margin: 0; background: #fff; }
+  html, body { margin: 0; background: #fff; height: 100%; overflow: hidden; touch-action: none; overscroll-behavior: none; }
   body {
     overflow-x: hidden;
     color: #000;
@@ -24,7 +24,7 @@
     left: 50%;
     width: min(100vw, 480px);
     margin-left: calc(min(100vw, 480px) / -2);
-    height: calc(var(--u) * 2988);
+    height: calc(var(--u) * 2888);
     will-change: transform;
   }
 
@@ -48,7 +48,31 @@
   }
   .t.small { font-size: calc(var(--u) * 70); letter-spacing: -0.05em; line-height: 1; }
 
-  #nameRow { top: calc(var(--u) * 100); }
+  /* Шапка: белая подложка 200 (50 отступ, 100 название, 50 отступ), закреплена сверху */
+  #head {
+    --e: 0;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    width: min(100vw, 480px);
+    margin-left: calc(min(100vw, 480px) / -2);
+    box-sizing: border-box;
+    height: calc(var(--u) * 200 + env(safe-area-inset-top, 0px));
+    background: #fff;
+    z-index: 20;
+  }
+  #nameRow { top: calc(var(--u) * 50 + env(safe-area-inset-top, 0px)); }
+  /* Слой над шапкой: 3D-лого и зона вращения (лого заезжает в шапку поверх подложки) */
+  #fx {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    width: min(100vw, 480px);
+    margin-left: calc(min(100vw, 480px) / -2);
+    height: 100%;
+    pointer-events: none;
+    z-index: 30;
+  }
   /* Место под логотип слева от названия: растёт от 0 до 61×70 по мере прокрутки. */
   .slot {
     flex: none;
@@ -57,7 +81,7 @@
     height: 1px;
   }
 
-  /* «Листай ниже»: белая подложка 300 (100 отступ + 100 текст + 100 отступ), контент уезжает под неё */
+  /* «Листай ниже»: белая подложка 200 (50 отступ, 100 текст, 50 отступ), контент уезжает под неё */
   #hint {
     position: fixed;
     left: 50%;
@@ -65,7 +89,7 @@
     margin-left: calc(min(100vw, 480px) / -2);
     bottom: 0;
     box-sizing: border-box;
-    height: calc(var(--u) * 300 + env(safe-area-inset-bottom, 0px));
+    height: calc(var(--u) * 200 + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     display: flex;
     align-items: center;
@@ -85,7 +109,6 @@
     transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1);
   }
   .label.show { opacity: 1; transform: none; }
-  #lblPost.show { transition-delay: .5s; }
   #lblPort { top: calc(var(--u) * 300); }
   #lblPost { top: calc(var(--u) * 780); left: calc(var(--u) * 55); width: calc(var(--u) * 630); }
 
@@ -99,14 +122,13 @@
     pointer-events: none;
     transform-origin: 50% 50%;
     will-change: transform;
-    z-index: 5;
   }
   #stage canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
   /* Зона вращения меньше всего поля: всё вокруг логотипа остаётся для обычной прокрутки */
   #hit {
     position: absolute;
     left: 0; top: 0; width: 0; height: 0;
-    z-index: 6;
+    pointer-events: auto;
     touch-action: none;
     cursor: grab;
   }
@@ -123,7 +145,7 @@
     border: max(calc(var(--u) * 1), 1px) solid #000;
     background: #fff;
     opacity: 0;
-    transition: opacity .2s linear;
+    transition: opacity .6s ease-out;
   }
   .tile.ph { opacity: 1; }
   .tile svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: opacity .5s; }
@@ -131,7 +153,7 @@
   .tile .photo {
     position: absolute; inset: 0;
     background-size: cover; background-position: center; background-repeat: no-repeat;
-    opacity: 0; transition: opacity .8s;
+    opacity: 0; transition: opacity .6s;
   }
   .tile.on .photo { opacity: 1; }
   .tile.on svg { opacity: 0; }
@@ -141,14 +163,15 @@
 <div id="spacer"></div>
 
 <div class="page" id="page">
-  <div class="row" id="nameRow"><span class="slot"></span><span class="t" id="title">Obsessive Glow</span></div>
   <div class="row label" id="lblPort"><span class="t">Портфолио</span></div>
   <div class="row label" id="lblPost"><span class="t">Постеры</span></div>
   <div id="tiles"></div>
 
+</div>
+<div id="head"><div class="row" id="nameRow"><span class="slot"></span><span class="t" id="title">Obsessive Glow</span></div></div>
+<div id="fx">
   <div id="stage"></div>
   <div id="hit"></div>
-
 </div>
 <div id="hint"><span class="t small">Листай ниже</span><svg width="50" height="28" viewBox="0 0 50 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M44.6659 0.911197C45.8863 -0.303709 47.8645 -0.303756 49.0849 0.911197C50.305 2.12617 50.3051 4.09567 49.0849 5.31054L27.2096 27.0885C26.6236 27.6719 25.8288 27.9999 25.0001 28C24.1714 28 23.3766 27.6718 22.7906 27.0885L0.915303 5.31054C-0.305101 4.09557 -0.305101 2.12617 0.915303 0.911197C2.13571 -0.303708 4.11393 -0.303756 5.33431 0.911197L25.0001 20.4895L44.6659 0.911197Z" fill="#000"/></svg></div>
 <div id="err">Не удалось загрузить 3D-библиотеку.</div>
@@ -174,7 +197,9 @@
   var $ = function (s) { return document.querySelector(s); };
   var page = $('#page'), stage = $('#stage'), hit = $('#hit'), spacer = $('#spacer');
   var titleEl = $('#title'), lblPort = $('#lblPort'), lblPost = $('#lblPost');
-  var tilesBox = $('#tiles');
+  var tilesBox = $('#tiles'), head = $('#head'), hintEl = $('#hint');
+  var GATE = 4;           // «первые работы»: страница не пускает дальше, пока они не прогрузятся
+  var shownAt = [0, 0];   // когда появились «Портфолио» и «Постеры»
 
   /* ---------- Фото-плитки (положение из макета, в единицах макета 1080) ---------- */
   // [номер, left, top, width, height]  — файлы лежат в папке photos/ : 1.jpg … 9.jpg
@@ -213,7 +238,7 @@
     el.innerHTML = X + '<div class="photo"></div>';
     tilesBox.appendChild(el);
     var t = { y: f[2], top: 0, el: el, photo: el.lastChild, url: null,
-              a: 0, rank: 0, rev: false, wantOn: false, timer: 0, sy0: 0, D: 0 };
+              a: 0, rank: 0, t0: 0, rev: false, wantOn: false, timer: 0, gated: false, visAt: 0, sy0: 0, D: 0 };
     loadImg(f[0], function (url) {
       t.url = url;
       t.photo.style.backgroundImage = 'url("' + url + '")';
@@ -224,12 +249,12 @@
 
   // порядок сверху вниз: сначала верхние, нижние позже
   tiles.sort(function (p, q) { return p.y - q.y || parseFloat(p.el.style.left.split('*')[1]) - parseFloat(q.el.style.left.split('*')[1]); });
-  tiles.forEach(function (t, i) { t.rank = i; t.a = 0.7 + i * 0.025; });
+  tiles.forEach(function (t, i) { t.rank = i; t.a = 0; t.gated = i < GATE; });
 
   // Сначала появляется пустой квадрат с крестом; фото проявляется позже — по мере дальнейшего листания
   function reveal(t, sy) {
     t.rev = true;
-    t.sy0 = sy;
+    t.sy0 = sy; t.t0 = performance.now();
     t.D = vh * (0.16 + Math.random() * 0.1);   // сколько ещё нужно пролистать до проявления фото
     t.el.classList.add('ph');
   }
@@ -238,7 +263,7 @@
     if (t.url) t.el.classList.add('on');
   }
   function resetTile(t) {
-    t.rev = false; t.wantOn = false;
+    t.rev = false; t.wantOn = false; t.visAt = 0;
     t.el.classList.remove('on');
     t.el.classList.remove('ph');
   }
@@ -315,18 +340,21 @@
   hit.addEventListener('lostpointercapture', release);
 
   /* ---------- Размеры и анимация по прокрутке ---------- */
-  var pageW = 480, u = 0.444, startY = 1170 * 0.444, vh = 700, T = 600, titleW = 0, logoFrac = 0.39, sc1 = 0.1;
+  var cur = 0, target = 0, maxS = 0, gateDone = false, lockT0 = 0;
+  var pageW = 480, u = 0.444, startY = 1170 * 0.444, endYc = 100 * 0.444, vh = 700, T = 600, titleW = 0, logoFrac = 0.39, sc1 = 0.1;
 
   function layout() {
     pageW = Math.min(innerWidth, 480);
     u = pageW / 1080;
     vh = innerHeight;
     T = Math.round(Math.max(vh * 0.9, 480));          // сколько прокрутки занимает переезд логотипа
-    spacer.style.height = (T + 2988 * u) + 'px';
+    maxS = Math.max(0, T + 2888 * u - vh);               // длина «виртуальной» прокрутки
+    target = clamp(target, 0, gateDone ? maxS : Math.min(maxS, T)); cur = clamp(cur, 0, maxS);
     titleW = titleEl.offsetWidth;
-    // лого по центру свободной области: между названием (низ 200) и белой подложкой снизу
-    var barH = document.getElementById('hint').offsetHeight;
-    startY = (200 * u + (vh - barH)) / 2;
+    // лого по центру свободной области: между верхней и нижней белыми подложками
+    var barH = hintEl.offsetHeight, headH = head.offsetHeight;
+    endYc = (headH - 200 * u) + 100 * u;               // центр названия (с учётом safe-area сверху)
+    startY = (headH + (vh - barH)) / 2;
     sc1 = (70 * u) / (logoFrac * 1740 * u);            // во сколько раз лого уменьшается до 70 в шапке
     tiles.forEach(function (t) { t.top = t.y * u; });
   }
@@ -349,12 +377,67 @@
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
   function ease(p) { return p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; }
 
+  /* ---------- Плавная прокрутка + гейт ----------
+     Нативную прокрутку отключаем: жесты и колесо двигают целевую позицию, а страница плавно (с ограничением
+     скорости) догоняет её сама. Пока не показались первые работы, дальше экрана с ними не пускаем:
+     первое движение вниз сразу доезжает до него само. */
+  function nudge(d) {
+    if (Math.abs(d) < 0.5) return;
+    if (!gateDone && d > 0 && target < T - 1) { target = T; return; }
+    target = clamp(target + d, 0, gateDone ? maxS : Math.min(maxS, T));
+  }
+  addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var d = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * vh : e.deltaY;
+    nudge(clamp(d, -160, 160));
+  }, { passive: false });
+
+  var tY = 0, tIgnore = false, tSamples = [];
+  addEventListener('touchstart', function (e) {
+    tIgnore = e.target === hit;                       // палец на логотипе — это вращение, не прокрутка
+    tY = e.touches[0].clientY;
+    tSamples = [{ y: tY, t: performance.now() }];
+  }, { passive: true });
+  addEventListener('touchmove', function (e) {
+    if (tIgnore) return;
+    if (e.cancelable) e.preventDefault();
+    var y = e.touches[0].clientY;
+    nudge(tY - y);
+    tY = y;
+    var now = performance.now();
+    tSamples.push({ y: y, t: now });
+    while (tSamples.length > 2 && now - tSamples[0].t > 120) tSamples.shift();
+  }, { passive: false });
+  function touchEnd() {
+    if (tIgnore || tSamples.length < 2) return;
+    var f = tSamples[0], l = tSamples[tSamples.length - 1];
+    var v = (f.y - l.y) / Math.max(1, l.t - f.t);      // px/мс, вниз — положительная
+    if (Math.abs(v) > 0.25) nudge(clamp(v * 180, -420, 420));   // небольшой «накат», без резких пролётов
+    tSamples = [];
+  }
+  addEventListener('touchend', touchEnd, { passive: true });
+  addEventListener('touchcancel', function () { tSamples = []; }, { passive: true });
+  addEventListener('keydown', function (e) {
+    var k = e.key, d = 0;
+    if (k === 'ArrowDown') d = 120; else if (k === 'ArrowUp') d = -120;
+    else if (k === 'PageDown' || (k === ' ' && !e.shiftKey)) d = vh * 0.8;
+    else if (k === 'PageUp' || (k === ' ' && e.shiftKey)) d = -vh * 0.8;
+    else if (k === 'Home') d = -1e6; else if (k === 'End') d = 1e6;
+    else return;
+    e.preventDefault();
+    nudge(d);
+  });
+
   var pCur = 0, prev = performance.now(), lastMove = prev, lastSy = 0;
   function frame(now) {
     var dt = Math.min((now - prev) / 1000, 0.05);
     prev = now;
 
-    var sy = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var stp = (target - cur) * (1 - Math.exp(-dt * 6.5));   // плавное догоняние цели
+    var cap = 2400 * dt;                                    // и ограничение скорости: слишком резко не пролетит
+    cur += clamp(stp, -cap, cap);
+    if (Math.abs(target - cur) < 0.3) cur = target;
+    var sy = cur;
     if (Math.abs(sy - lastSy) > 0.5) { lastMove = now; lastSy = sy; }
     var pT = clamp(sy / T, 0, 1);
     pCur += (pT - pCur) * (1 - Math.exp(-dt * 9));
@@ -362,13 +445,13 @@
     var e = ease(pCur);
     var pageScroll = Math.max(0, sy - T);
 
-    page.style.setProperty('--e', e.toFixed(4));
+    head.style.setProperty('--e', e.toFixed(4));
     page.style.transform = 'translate3d(0,' + (-pageScroll) + 'px,0)';
 
     // 3D-логотип: из центра поля в шапку слева от названия
     var rowW = 86 * u * e + titleW;
     var endX = (pageW - rowW) / 2 + 30.5 * u * e;
-    var endY = 150 * u, startX = pageW / 2;
+    var endY = endYc, startX = pageW / 2;
     stage.style.transform = 'translate3d(' + ((endX - startX) * e) + 'px,' + ((startY - 1170 * u) + (endY - startY) * e) + 'px,0) scale(' + Math.pow(sc1, e) + ')';
     // Зона вращения едет вместе с логотипом (в шапке не меньше 56px, чтобы попасть пальцем)
     var sc = Math.pow(sc1, e);
@@ -379,23 +462,40 @@
     hit.style.width = hw + 'px';
     hit.style.height = hh + 'px';
 
-    // Надписи и фото
+    // Надписи и фото: сначала «Портфолио», через паузу «Постеры», потом по очереди квадраты, потом фото
     if (pCur < 0.45) {
       lblPort.classList.remove('show');
       lblPost.classList.remove('show');
+      shownAt[0] = shownAt[1] = 0;
+      gateDone = false; lockT0 = 0;                    // вернулся наверх — гейт снова включится
       for (var k = 0; k < tiles.length; k++) if (tiles[k].rev) resetTile(tiles[k]);
     } else {
-      if (pCur > 0.8) lblPort.classList.add('show');
-      if (pCur > 0.88 && 780 * u - pageScroll < vh * 0.92) lblPost.classList.add('show');
+      if (pCur > 0.75 && !shownAt[0]) { lblPort.classList.add('show'); shownAt[0] = now; }
+      if (shownAt[0] && now - shownAt[0] > 450 && !shownAt[1] && 780 * u - pageScroll < vh * 0.95) {
+        lblPost.classList.add('show'); shownAt[1] = now;
+      }
       var idle = now - lastMove;
       for (var i = 0; i < tiles.length; i++) {          // tiles отсортированы сверху вниз
         var t = tiles[i];
         if (!t.rev) {
-          if (pCur >= t.a && t.top - pageScroll < vh * 0.95) reveal(t, sy);
-        } else if (!t.wantOn) {
-          // фото проявляется по мере листания; если остановился надолго — доезжают сами, по очереди сверху вниз
-          if (sy - t.sy0 >= t.D || idle > 2000 + t.rank * 150) photoOn(t);
+          // квадраты начинают появляться после «Постеров», друг за другом сверху вниз
+          if (shownAt[1] && now - shownAt[1] > (t.gated ? 200 + t.rank * 90 : 400 + t.rank * 160) && t.top - pageScroll < vh * 0.95) reveal(t, sy);
+        } else if (!t.wantOn && now - t.t0 > 350) {
+          // фото проявляется по мере листания; если остановился надолго — доезжают сами
+          if (t.gated ? now - t.t0 > 350 + t.rank * 80 : (sy - t.sy0 >= t.D || idle > 1500 + t.rank * 150)) photoOn(t);
         }
+      }
+      // Гейт: пока первые работы не показались, вниз не пускаем
+      if (!gateDone && cur >= T - 2) {
+        var ok = true;
+        for (var g = 0; g < tiles.length; g++) {
+          var tg = tiles[g];
+          if (!tg.gated) continue;
+          if (tg.wantOn && tg.url && !tg.visAt) tg.visAt = now;
+          if (!(tg.visAt && now - tg.visAt > 350)) ok = false;
+        }
+        if (!lockT0) lockT0 = now;
+        if (ok || now - lockT0 > 6000) gateDone = true;   // 6 с — страховка, если фото не грузятся
       }
     }
 
