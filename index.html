@@ -251,13 +251,14 @@
 
   function reveal(t) {
     t.rev = true;
-    t.el.classList.add('ph');                       // сначала пустой квадрат с крестом
+    t.ph = false;
+    t.showAt = performance.now() + Math.random() * 1000;   // квадраты появляются хаотично, не одновременно
     t.visAt = 0;
     // сколько квадрат «висит» без фото с момента, как попал в экран: верхние чуть дольше, нижние — короче
     t.delay = t.top < vh * 0.9 ? 700 + Math.random() * 800 : 300 + Math.random() * 500;
   }
   function resetTile(t) {
-    t.rev = false; t.wantOn = false; t.visAt = 0;
+    t.rev = false; t.ph = false; t.wantOn = false; t.visAt = 0;
     t.el.classList.remove('on');
     t.el.classList.remove('ph');
   }
@@ -340,7 +341,7 @@
     pageW = Math.min(innerWidth, 480);
     u = pageW / 1080;
     vh = innerHeight;
-    T = Math.round(Math.max(vh * 0.9, 480));          // сколько прокрутки занимает переезд логотипа
+    T = Math.round(Math.max(vh * 0.75, 420));          // сколько прокрутки занимает переезд логотипа
     spacer.style.height = (T + 2888 * u) + 'px';
     titleW = titleEl.offsetWidth;
     var barH = hintEl.offsetHeight, headH = head.offsetHeight;
@@ -368,14 +369,14 @@
   function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
   function ease(p) { return p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; }
 
-  var pCur = 0, prev = performance.now();
+  var pCur = 0, prev = performance.now(), portAt = 0;
   function frame(now) {
     var dt = Math.min((now - prev) / 1000, 0.05);
     prev = now;
 
     var sy = window.pageYOffset || document.documentElement.scrollTop || 0;
     var pT = clamp(sy / T, 0, 1);
-    pCur += (pT - pCur) * (1 - Math.exp(-dt * 9));
+    pCur += (pT - pCur) * (1 - Math.exp(-dt * 11));
     if (Math.abs(pT - pCur) < 0.0005) pCur = pT;
     var e = ease(pCur);
     var pageScroll = Math.max(0, sy - T);
@@ -401,18 +402,23 @@
     if (pCur < 0.45) {
       lblPort.classList.remove('show');
       lblPost.classList.remove('show');
+      portAt = 0;
       for (var k = 0; k < tiles.length; k++) if (tiles[k].rev) resetTile(tiles[k]);
     } else {
-      // «Портфолио», «Постеры» и все квадраты с крестами появляются одновременно; фото проявляются хаотично, уже заранее
+      // «Портфолио» сразу, «Постеры» чуть позже; квадраты с крестами — хаотично, не одновременно
       if (pCur > 0.55) {
-        lblPort.classList.add('show');
-        lblPost.classList.add('show');
-        for (var i = 0; i < tiles.length; i++) if (!tiles[i].rev) reveal(tiles[i]);
+        if (!portAt) { portAt = now; lblPort.classList.add('show'); }
+        if (now - portAt > 350) lblPost.classList.add('show');
+        for (var i = 0; i < tiles.length; i++) {
+          var ti = tiles[i];
+          if (!ti.rev) reveal(ti);
+          if (!ti.ph && now >= ti.showAt) { ti.ph = true; ti.el.classList.add('ph'); }
+        }
       }
       // Фото проявляется, когда квадрат попал в экран и «повисел» немного; по мере листания вниз — так же для нижних
       for (var j = 0; j < tiles.length; j++) {
         var tj = tiles[j];
-        if (!tj.rev || tj.wantOn) continue;
+        if (!tj.rev || !tj.ph || tj.wantOn) continue;
         if (tj.top - pageScroll < vh * 0.88) {
           if (!tj.visAt) tj.visAt = now;
           if (now - tj.visAt > tj.delay) {
